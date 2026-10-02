@@ -4,6 +4,7 @@ import {
   formatForecast,
   formatBusArrivals,
   haversineMetres,
+  CT_HUB_2,
 } from "../src/tools.js";
 
 test("formatForecast picks the requested area", () => {
@@ -54,4 +55,10 @@ test("haversineMetres measures CT Hub 2 to Lavender MRT at under 600 m", () => {
   const lavenderMrt = { latitude: 1.3073, longitude: 103.8631 };
   const distance = haversineMetres(ctHub2, lavenderMrt);
   assert.ok(distance > 400 && distance < 550, `got ${distance}`);
+});
+
+test("CT_HUB_2 is in Lavender, walking distance from Lavender MRT", () => {
+  const lavenderMrt = { latitude: 1.3073, longitude: 103.8631 };
+  const distance = haversineMetres(CT_HUB_2, lavenderMrt);
+  assert.ok(distance < 600, `CT_HUB_2 is ${Math.round(distance)} m from Lavender MRT`);
 });
