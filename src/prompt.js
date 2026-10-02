@@ -14,13 +14,38 @@ How you work:
 - Call get_bus_arrivals only when the user gives a bus stop code or asks about a specific bus.
 - Recommend one or two places, not a list of ten. Say why.
 - If a place is closed, say so and pick something else.
+- You are told the current Singapore time above. Treat it as now, and use it when
+  the user asks about the time or whether it is still lunch hour.
 - Keep replies under 120 words.`;
 
 /**
- * Build the system prompt for one request.
+ * Render an instant as Singapore wall-clock time.
+ *
+ * Workers run in UTC. An unconverted timestamp puts Uncle eight hours behind
+ * his own customers, and between midnight and 8am it lands on the wrong date
+ * and the wrong day of the week.
  */
-export function buildSystemPrompt() {
+export function formatSingaporeTime(date) {
+  return SINGAPORE_TIME.format(date);
+}
+
+const SINGAPORE_TIME = new Intl.DateTimeFormat("en-SG", {
+  timeZone: "Asia/Singapore",
+  weekday: "long",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+/**
+ * Build the system prompt for one request.
+ *
+ * now is injectable so the time rendering can be tested against fixed instants.
+ */
+export function buildSystemPrompt(now = new Date()) {
   const requestId = crypto.randomUUID();
-  const now = new Date().toISOString();
-  return `Request ${requestId} at ${now}. ${PERSONA}`;
+  return `Request ${requestId}. The current time in Singapore is ${formatSingaporeTime(now)}. ${PERSONA}`;
 }

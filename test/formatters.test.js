@@ -5,6 +5,7 @@ import {
   formatBusArrivals,
   haversineMetres,
 } from "../src/tools.js";
+import { formatSingaporeTime, buildSystemPrompt } from "../src/prompt.js";
 
 test("formatForecast picks the requested area", () => {
   const payload = {
@@ -54,4 +55,29 @@ test("haversineMetres measures CT Hub 2 to Lavender MRT at under 600 m", () => {
   const lavenderMrt = { latitude: 1.3073, longitude: 103.8631 };
   const distance = haversineMetres(ctHub2, lavenderMrt);
   assert.ok(distance > 400 && distance < 550, `got ${distance}`);
+});
+
+test("formatSingaporeTime renders lunchtime, not the UTC hour", () => {
+  // 04:30 UTC is 12:30 pm in Singapore: peak lunch, not pre-dawn.
+  const noon = new Date("2026-10-02T04:30:00.000Z");
+  assert.equal(formatSingaporeTime(noon), "Friday, 2 Oct 2026, 12:30 pm");
+});
+
+test("formatSingaporeTime keeps the right day before 8am", () => {
+  // 17:00 UTC on Friday is already 1am Saturday in Singapore. Rendering this
+  // in UTC reports both the wrong time and the wrong day of the week.
+  const pastMidnight = new Date("2026-10-02T17:00:00.000Z");
+  assert.equal(
+    formatSingaporeTime(pastMidnight),
+    "Saturday, 3 Oct 2026, 1:00 am",
+  );
+});
+
+test("buildSystemPrompt states the Singapore time and no UTC timestamp", () => {
+  const prompt = buildSystemPrompt(new Date("2026-10-02T04:30:00.000Z"));
+  assert.match(
+    prompt,
+    /The current time in Singapore is Friday, 2 Oct 2026, 12:30 pm\./,
+  );
+  assert.doesNotMatch(prompt, /\d{4}-\d{2}-\d{2}T/, "leaked an ISO timestamp");
 });
